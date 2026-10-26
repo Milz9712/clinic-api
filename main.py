@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 
+from pydantic import BaseModel 
+
 app = FastAPI()
 
 TREATMENTS = [
@@ -8,6 +10,9 @@ TREATMENTS = [
     {"id": 3, "name": "sports recovery", "price": 65},
 ]
 
+class treatment(BaseModel):
+    name: str
+    price: int
 @app.get("/")
 def home():
     return {"clinic": "Hainault Health Clinic", "status": "open"} 
@@ -22,3 +27,10 @@ def get_treatment(treatment_id: int):
         if t["id"] == treatment_id:
             return t
     raise HTTPException(status_code=404, detail="Treatment not found")
+
+@app.post("/treatments")
+def add_treatment(treatment: treatment):
+    new = {"id": len(TREATMENTS) + 1, "name": treatment.name, "price": treatment.price}
+    TREATMENTS.append(new)
+    return new 
+    
