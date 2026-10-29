@@ -9,6 +9,12 @@ pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+## Run the tests
+
+```
+pytest
+```
+
 ## Endpoints 
 
 | Method | Path | What it does |
@@ -17,6 +23,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 | GET | /treatments | Returns all treatments |
 | GET | /treatments/{id} | Returns one treatment by ID. 404 if not found, 422 if the ID isn't a number |
 | POST | /treatments | Adds a new treatment. Needs name and price, 422 if either is missing. | 
+| DELETE | /treatments/{id} | Removes a treatment by ID. 404 if not found |
 
 ## Example
 
@@ -27,6 +34,6 @@ curl localhost:8000/treatments
 
 ## What I'm building next
 
-- Delete a treatment (DELETE /treatments/{id})
-- Tests with pytest
+- More tests (POST and DELETE)
 - Store data in a Postgres database instead of memory
+- Deploy it online
