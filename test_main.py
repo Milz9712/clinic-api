@@ -19,3 +19,14 @@ def test_treatment_not_found():
 def test_invalid_id():
     response = client.get("/treatments/abc")
     assert response.status_code == 422
+
+
+def test_create_treatment():
+    response = client.post("/treatments", json={"name": "cupping", "price": 40})
+    assert response.status_code == 200
+    assert response.json()["name"] == "cupping"
+
+
+def test_create_missing_price():
+    response = client.post("/treatments", json={"name": "cupping"})
+    assert response.status_code == 422
