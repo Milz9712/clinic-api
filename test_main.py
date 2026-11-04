@@ -30,3 +30,11 @@ def test_create_treatment():
 def test_create_missing_price():
     response = client.post("/treatments", json={"name": "cupping"})
     assert response.status_code == 422
+
+
+def test_delete_treatments():
+    response = client.delete("/treatments/2")
+    assert response.status_code == 200
+
+    response = client.delete("/treatments/2")
+    assert response.status_code == 404
