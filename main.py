@@ -2,6 +2,11 @@ from fastapi import FastAPI, HTTPException
 
 from pydantic import BaseModel
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = FastAPI()
 
 TREATMENTS = [
@@ -11,7 +16,7 @@ TREATMENTS = [
 ]
 
 
-class treatment(BaseModel):
+class Treatment(BaseModel):
     name: str
     price: int
 
@@ -35,7 +40,8 @@ def get_treatment(treatment_id: int):
 
 
 @app.post("/treatments")
-def add_treatment(treatment: treatment):
+def add_treatment(treatment: Treatment):
+    logger.info("Creating treatment: %s", treatment.name)
     new = {"id": len(TREATMENTS) + 1, "name": treatment.name, "price": treatment.price}
     TREATMENTS.append(new)
     return new
@@ -45,6 +51,6 @@ def add_treatment(treatment: treatment):
 def delete_treatment(treatment_id: int):
     for t in TREATMENTS:
         if t["id"] == treatment_id:
-            TREATMENTS.remove(t)
+            TREATMENTS.remove(t) 
             return {"deleted": t}
     raise HTTPException(status_code=404, detail="Treatment not found")
