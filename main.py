@@ -36,6 +36,7 @@ def get_treatment(treatment_id: int):
     for t in TREATMENTS:
         if t["id"] == treatment_id:
             return t
+    logger.warning("Treatment not found: %s", treatment_id)
     raise HTTPException(status_code=404, detail="Treatment not found")
 
 
@@ -53,4 +54,5 @@ def delete_treatment(treatment_id: int):
         if t["id"] == treatment_id:
             TREATMENTS.remove(t)
             return {"deleted": t}
+    logger.warning("Treatment not found: %s", treatment_id)
     raise HTTPException(status_code=404, detail="Treatment not found")

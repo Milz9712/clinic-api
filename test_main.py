@@ -38,3 +38,8 @@ def test_delete_treatments():
 
     response = client.delete("/treatments/2")
     assert response.status_code == 404
+
+
+def test_missing_treatment_logs_warning(caplog):
+    client.get("/treatments/99")
+    assert "Treatment not found: 99" in caplog.text
