@@ -51,6 +51,6 @@ def add_treatment(treatment: Treatment):
 def delete_treatment(treatment_id: int):
     for t in TREATMENTS:
         if t["id"] == treatment_id:
-            TREATMENTS.remove(t) 
+            TREATMENTS.remove(t)
             return {"deleted": t}
     raise HTTPException(status_code=404, detail="Treatment not found")
