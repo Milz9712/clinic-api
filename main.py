@@ -42,11 +42,14 @@ def treatments():
 
 @app.get("/treatments/{treatment_id}")
 def get_treatment(treatment_id: int):
-    for t in TREATMENTS:
-        if t["id"] == treatment_id:
-            return t
-    logger.warning("Treatment not found: %s", treatment_id)
-    raise HTTPException(status_code=404, detail="Treatment not found")
+    with psycopg.connect(DATABASE_URL) as conn:
+        row = conn.execute(
+            "SELECT id, name, price FROM treatments WHERE id = %s", (treatment_id,)
+        ).fetchone()
+    if row is None:
+        logger.warning("Treatment not found: %s", treatment_id)
+        raise HTTPException(status_code=404, detail="Treatment not found")
+    return {"id": row[0], "name": row[1], "price": row[2]}
 
 
 @app.post("/treatments")
