@@ -4,6 +4,11 @@ from pydantic import BaseModel
 
 import logging
 
+import os
+import psycopg
+
+DATABASE_URL = os.environ["DATABASE_URL"]
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -28,7 +33,11 @@ def home():
 
 @app.get("/treatments")
 def treatments():
-    return TREATMENTS
+    with psycopg.connect(DATABASE_URL) as conn:
+        rows = conn.execute(
+            "SELECT id, name, price FROM treatments ORDER BY id"
+        ).fetchall()
+    return [{"id": r[0], "name": r[1], "price": r[2]} for r in rows]
 
 
 @app.get("/treatments/{treatment_id}")
