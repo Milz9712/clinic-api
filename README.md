@@ -15,6 +15,17 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 pytest
 ```
 
+Expected: 7 passed
+
+What the tests cover:
+- GET /treatments returns 200 (list works)
+- GET /treatments/99 returns 404 (treatment doesn't exist)
+- GET /treatments/abc returns 422 (id isn't a number)
+- POST /treatments with a name and price returns 200, and the response contains the name it sent (cupping)
+- POST /treatments with a name only returns 422, wrong input as price is missing
+- DELETE /treatments/2 returns 200, the second DELETE returns 404 because treatment 2 no longer exists. 
+- GET /treatments/99 returns a 404, and the app logs a warning, which the test checks with caplog.
+
 ## Endpoints 
 
 | Method | Path | What it does |
@@ -34,6 +45,13 @@ curl localhost:8000/treatments
 
 ## What I'm building next
 
-- More tests (POST and DELETE)
 - Store data in a Postgres database instead of memory
 - Deploy it online
+
+## Logging
+
+When a treatment is created, the app logs: an INFO line with its name for example "Creating treatment: cupping". 
+When a treatment isn't found (GET or DELETE), the app logs a WARNING with the id, for example "Treatment not found: 99"
+These lines can be seen on the server console where the uvicorn is running.
+
+ 
