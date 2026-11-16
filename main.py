@@ -55,9 +55,15 @@ def get_treatment(treatment_id: int):
 @app.post("/treatments")
 def add_treatment(treatment: Treatment):
     logger.info("Creating treatment: %s", treatment.name)
-    new = {"id": len(TREATMENTS) + 1, "name": treatment.name, "price": treatment.price}
-    TREATMENTS.append(new)
-    return new
+    with psycopg.connect(DATABASE_URL) as conn:
+        row = conn.execute(
+            "INSERT INTO treatments (name, price) VALUES (%s, %s) RETURNING id, name, price", 
+            (treatment.name, treatment.price)
+        ).fetchone()
+        if row is None:
+            logger.error("Treatment insert returned no row")
+            raise HTTPException(status_code=500, detail="Failed to create treatment")
+    return {"id": row[0], "name": row[1], "price": row[2]}
 
 
 @app.delete("/treatments/{treatment_id}")
