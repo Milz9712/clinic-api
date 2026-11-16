@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
 
-TestClient
 from main import app
 
 client = TestClient(app)
@@ -25,6 +24,8 @@ def test_create_treatment():
     response = client.post("/treatments", json={"name": "cupping", "price": 40})
     assert response.status_code == 200
     assert response.json()["name"] == "cupping"
+    new_id = response.json()["id"]
+    client.delete(f"/treatments/{new_id}")
 
 
 def test_create_missing_price():
