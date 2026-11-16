@@ -14,12 +14,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-TREATMENTS = [
-    {"id": 1, "name": "deep tissue", "price": 50},
-    {"id": 2, "name": "massage", "price": 45},
-    {"id": 3, "name": "sports recovery", "price": 65},
-]
-
 
 class Treatment(BaseModel):
     name: str
@@ -57,8 +51,8 @@ def add_treatment(treatment: Treatment):
     logger.info("Creating treatment: %s", treatment.name)
     with psycopg.connect(DATABASE_URL) as conn:
         row = conn.execute(
-            "INSERT INTO treatments (name, price) VALUES (%s, %s) RETURNING id, name, price", 
-            (treatment.name, treatment.price)
+            "INSERT INTO treatments (name, price) VALUES (%s, %s) RETURNING id, name, price",
+            (treatment.name, treatment.price),
         ).fetchone()
         if row is None:
             logger.error("Treatment insert returned no row")
@@ -68,9 +62,12 @@ def add_treatment(treatment: Treatment):
 
 @app.delete("/treatments/{treatment_id}")
 def delete_treatment(treatment_id: int):
-    for t in TREATMENTS:
-        if t["id"] == treatment_id:
-            TREATMENTS.remove(t)
-            return {"deleted": t}
-    logger.warning("Treatment not found: %s", treatment_id)
-    raise HTTPException(status_code=404, detail="Treatment not found")
+    with psycopg.connect(DATABASE_URL) as conn:
+        row = conn.execute(
+            "DELETE FROM treatments WHERE id = %s RETURNING id, name, price",
+            (treatment_id,),
+        ).fetchone()
+    if row is None:
+        logger.warning("Treatment not found: %s", treatment_id)
+        raise HTTPException(status_code=404, detail="Treatment not found")
+    return {"deleted": {"id": row[0], "name": row[1], "price": row[2]}}

@@ -33,10 +33,13 @@ def test_create_missing_price():
 
 
 def test_delete_treatments():
-    response = client.delete("/treatments/2")
+    created = client.post("/treatments", json={"name": "test delete", "price": 1})
+    new_id = created.json()["id"]
+
+    response = client.delete(f"/treatments/{new_id}")
     assert response.status_code == 200
 
-    response = client.delete("/treatments/2")
+    response = client.delete(f"/treatments/{new_id}")
     assert response.status_code == 404
 
 
