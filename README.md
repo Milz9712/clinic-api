@@ -21,6 +21,7 @@ psql "$DATABASE_URL" -f schema.sql
 ```
 
 The tests use the real database, so `DATABASE_URL` must be set. The create and delete tests delete the rows they make, so they don't leave junk behind. 
+
 ## Run the tests
 
 ```
@@ -35,7 +36,7 @@ What the tests cover:
 - GET /treatments/abc returns 422 (id isn't a number)
 - POST /treatments with a name and price returns 200, and the response contains the name it sent (cupping)
 - POST /treatments with a name only returns 422, wrong input as price is missing
-- DELETE /treatments/2 returns 200, the second DELETE returns 404 because treatment 2 no longer exists. 
+- DELETE on a treatment the test just created returns 200; a second DELETE returns 404. 
 - GET /treatments/99 returns a 404, and the app logs a warning, which the test checks with caplog.
 
 ## Endpoints 
@@ -48,6 +49,15 @@ What the tests cover:
 | POST | /treatments | Adds a new treatment. Needs name and price, 422 if either is missing. | 
 | DELETE | /treatments/{id} | Removes a treatment by ID. 404 if not found |
 
+## Continuous integration (CI)
+
+Every push to GitHub runs two jobs automatically (`.github/workflows/docker.yml`):
+
+- **build** builds the Docker image from the `Dockerfile`, to check the app still packages correctly.
+- **test** starts a temporary Postgres database, creates the table with `schema.sql`, and runs `pytest`. The database is thrown away afterwards, so no real data is ever touched.
+
+See the results in the **Actions** tab on GitHub: a green tick means both jobs passed. 
+
 ## Example
 
 ```
@@ -57,7 +67,7 @@ curl localhost:8000/treatments
 
 ## What I'm building next
 
-- Store data in a Postgres database instead of memory
+- Deploy to AWS from GitHub Actions (OIDG, no stored keys)
 - Deploy it online
 
 ## Logging
