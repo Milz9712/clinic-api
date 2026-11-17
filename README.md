@@ -9,6 +9,18 @@ pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+## Database
+Clinic-api uses a Postgres database. The old in-memory list has been removed.
+
+The app finds the database through the environment variable `DATABASE_URL` (`os.environ["DATABASE_URL"]`), so set it before running the app. 
+
+To create the table on a new machine, run `schema.sql` against the database:
+
+```
+psql "$DATABASE_URL" -f schema.sql
+```
+
+The tests use the real database, so `DATABASE_URL` must be set. The create and delete tests delete the rows they make, so they don't leave junk behind. 
 ## Run the tests
 
 ```
