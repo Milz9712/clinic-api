@@ -1,6 +1,6 @@
 # clinic-api
 
-This API is for Hainault Health clinic where the API talks to my server by sending a request to an address, get data back. the clinic api lets someone get the treatment list, look up one treatment or add a new one. 
+This API is for Hainault Health clinic where the API talks to my server by sending a request to an address, get data back. the clinic api lets someone get the treatment list, look up one treatment, add a new one or or delete one.  
 
 ## How to run it
 
@@ -53,7 +53,7 @@ What the tests cover:
 
 Every push to GitHub runs two jobs automatically (`.github/workflows/docker.yml`):
 
-- **build** builds the Docker image from the `Dockerfile`, to check the app still packages correctly.
+- **build** runs onnly if **test** passes. It logs into AWS with GitHub OIDC (no stored keys), builds the Docker image and pushes it to a private Amazon ECR repository, tagged with the commit ID. 
 - **test** starts a temporary Postgres database, creates the table with `schema.sql`, and runs `pytest`. The database is thrown away afterwards, so no real data is ever touched.
 
 See the results in the **Actions** tab on GitHub: a green tick means both jobs passed. 
