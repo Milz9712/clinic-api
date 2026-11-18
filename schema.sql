@@ -1,4 +1,4 @@
-CREATE TABLE treatments (
+CREATE TABLE IF NOT EXISTS treatments (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   price INTEGER NOT NULL 

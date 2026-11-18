@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 
 from pydantic import BaseModel
@@ -12,7 +13,16 @@ DATABASE_URL = os.environ["DATABASE_URL"]
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app):
+    with psycopg.connect(DATABASE_URL) as conn:
+        with open("schema.sql") as f:
+            conn.execute(f.read())
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 class Treatment(BaseModel):
