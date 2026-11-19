@@ -2,6 +2,8 @@
 
 This API is for Hainault Health clinic where the API talks to my server by sending a request to an address, get data back. the clinic api lets someone get the treatment list, look up one treatment, add a new one or or delete one.  
 
+📄 [Read the case study: how I built and deployed this](CASE_STUDY.md)
+
 ## How to run it
 
 ```
