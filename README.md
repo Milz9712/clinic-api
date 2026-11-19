@@ -58,6 +58,40 @@ Every push to GitHub runs two jobs automatically (`.github/workflows/docker.yml`
 
 See the results in the **Actions** tab on GitHub: a green tick means both jobs passed. 
 
+## Deployment (AWS)
+
+clinic-api has been deployed live on AWS and tested over HTTPS. 
+
+### Architecture 
+
+```
+Internet --HTTPS ---> Load balancer --port 8000 ---> Container (ECS Fargate) --port 5432 --> Postgres (RDS)
+```
+
+- **GitHub Actions** runs the tests, then builds the Docker image and pushes it to **Amazon ECR**. It logs into AWS with **OIDC**, so no AWS keys are stored in GitHub.
+- **ECS Express Mode** runs the container on **Fargate** and creates the load balancer, HTTPS certificate and public URL.
+- **RDS Postgres** is **not publicly accessible**. Security groups only let the load balancer reach the app, and only the app reach the database.
+- On startup the app creates the table with `schema.sql` (`CREATE TABLE IF NOT EXISTS`, so it is safe to run every time).
+- `DATABASE_URL` is passed in as an environment variable, never stored in the code or the image.
+
+### Proof
+
+The service running, with load balancer health checks passing:
+
+![ECS service active](images/ecs-active.png)
+
+Live test: list (empty), create, then read back from the cloud database:
+
+![Live API test](images/live-test.png)
+
+### What went wrong and how I fixed it
+
+The first containers stopped on startup. The logs showed `ConnectionTimeout` when the app tried to reach the database. A timeout (no answer) rather than a password error pointed to the network: the database's security group didn't allow the app. I added an inbound rule for the PostgreSQL (5432) from the app's security group only, and the service went healthy. 
+
+### Cost
+
+The service was torn down after testing to save credits (a load balancer and database cost money every hour, even with no traffic). It can be redeployed from the image in ECR. 
+
 ## Example
 
 ```
