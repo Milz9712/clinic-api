@@ -1,6 +1,7 @@
 from psycopg.errors import ForeignKeyViolation
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -29,6 +30,13 @@ app = FastAPI(lifespan=lifespan)
 class Treatment(BaseModel):
     name: str
     price: int
+
+
+class Booking(BaseModel):
+    client_name: str
+    client_phone: str
+    treatment_id: int
+    starts_at: datetime
 
 
 @app.get("/")
@@ -88,3 +96,44 @@ def delete_treatment(treatment_id: int):
         logger.warning("Treatment not found: %s", treatment_id)
         raise HTTPException(status_code=404, detail="Treatment not found")
     return {"deleted": {"id": row[0], "name": row[1], "price": row[2]}}
+
+
+@app.post("/bookings")
+def add_booking(booking: Booking):
+    logger.info("Creating booking for the treatment %s", booking.treatment_id)
+    try:
+        with psycopg.connect(DATABASE_URL) as conn:
+            row = conn.execute(
+                "INSERT INTO bookings (client_name, client_phone, treatment_id, starts_at) "
+                "VALUES (%s, %s, %s, %s) RETURNING id, client_name, client_phone, treatment_id, starts_at",
+                (
+                    booking.client_name,
+                    booking.client_phone,
+                    booking.treatment_id,
+                    booking.starts_at,
+                ),
+            ).fetchone()
+    except ForeignKeyViolation:
+        raise HTTPException(status_code=404, detail="Treatment not found")
+    if row is None:
+        raise HTTPException(status_code=500, detail="Failed to create booking")
+    return {
+        "id": row[0],
+        "client_name": row[1],
+        "client_phone": row[2],
+        "treatment_id": row[3],
+        "starts_at": row[4],
+    }
+
+
+@app.get("/bookings")
+def list_bookings():
+    with psycopg.connect(DATABASE_URL) as conn:
+        rows = conn.execute(
+            "SELECT id, client_name, client_phone, treatment_id, starts_at FROM bookings ORDER BY starts_at"
+        ).fetchall()
+    return [
+        {"id": r[0], "client_name": r[1], "client_phone": r[2], 
+         "treatment_id": r[3], "starts_at": r[4]}
+        for r in rows
+    ]
