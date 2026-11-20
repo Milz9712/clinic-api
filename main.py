@@ -1,3 +1,4 @@
+from psycopg.errors import ForeignKeyViolation
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 
@@ -72,11 +73,17 @@ def add_treatment(treatment: Treatment):
 
 @app.delete("/treatments/{treatment_id}")
 def delete_treatment(treatment_id: int):
-    with psycopg.connect(DATABASE_URL) as conn:
-        row = conn.execute(
-            "DELETE FROM treatments WHERE id = %s RETURNING id, name, price",
-            (treatment_id,),
-        ).fetchone()
+    try:
+        with psycopg.connect(DATABASE_URL) as conn:
+            row = conn.execute(
+                "DELETE FROM treatments WHERE id = %s RETURNING id, name, price",
+                (treatment_id,),
+            ).fetchone()
+    except ForeignKeyViolation:
+        logger.warning("Treatment %s has bookings, not deleted", treatment_id)
+        raise HTTPException(
+            status_code=409, detail="Treatment has bookings and can't be deleted"
+        )
     if row is None:
         logger.warning("Treatment not found: %s", treatment_id)
         raise HTTPException(status_code=404, detail="Treatment not found")
