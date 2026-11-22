@@ -2,8 +2,7 @@ from psycopg.errors import ForeignKeyViolation, UniqueViolation
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from datetime import datetime
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import logging
 
@@ -28,13 +27,13 @@ app = FastAPI(lifespan=lifespan)
 
 
 class Treatment(BaseModel):
-    name: str
-    price: int
+    name: str = Field(min_length=1)
+    price: int = Field(gt=0)
 
 
 class Booking(BaseModel):
-    client_name: str
-    client_phone: str
+    client_name: str = Field(min_length=1)
+    client_phone: str = Field(min_length=1)
     treatment_id: int
     starts_at: datetime
 
