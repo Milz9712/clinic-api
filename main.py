@@ -137,3 +137,14 @@ def list_bookings():
          "treatment_id": r[3], "starts_at": r[4]}
         for r in rows
     ]
+
+@app.delete("/bookings/{booking_id}")
+def delete_booking(booking_id: int):
+    with psycopg.connect(DATABASE_URL) as conn:
+        row = conn.execute(
+            "DELETE FROM bookings WHERE id = %s RETURNING id", 
+            (booking_id,), 
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    return {"deleted": {"id": row[0]}}

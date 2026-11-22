@@ -47,3 +47,49 @@ def test_delete_treatments():
 def test_missing_treatment_logs_warning(caplog):
     client.get("/treatments/99")
     assert "Treatment not found: 99" in caplog.text
+
+
+def test_create_and_delete_bookings():
+    t = client.post("/treatments", json={"name": "test booking treatment", "price": 1})
+    treatment_id = t.json()["id"]
+
+    b = client.post(
+        "/bookings",
+        json={
+            "client_name": "Test",
+            "client_phone": "07000000000",
+            "treatment_id": treatment_id,
+            "starts_at": "2026-12-01T10:00:00Z",
+        },
+    )
+    assert b.status_code == 200
+    booking_id = b.json()["id"]
+
+    assert client.delete(f"/bookings/{booking_id}").status_code == 200
+    assert client.delete(f"/treatments/{treatment_id}").status_code == 200
+
+
+def test_booking_unknown_treatment():
+    response = client.post(
+        "/bookings",
+        json={
+            "client_name": "Test",
+            "client_phone": "07000000000",
+            "treatment_id": 999999,
+            "starts_at": "2026-12-01T10:00:00Z",
+        },
+    )
+    assert response.status_code == 404
+
+
+def test_booking_bad_date():
+    response = client.post(
+        "/bookings",
+        json={
+            "client_name": "Test",
+            "client_phone": "07000000000",
+            "treatment_id": 1,
+            "starts_at": "next tuesday",
+        },
+    )
+    assert response.status_code == 422
