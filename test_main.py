@@ -98,3 +98,19 @@ def test_booking_bad_date():
 def test_list_bookings():
     response = client.get("/bookings")
     assert response.status_code == 200
+
+
+def test_double_booking_returns_409():
+    t = client.post("/treatments", json={"name": "test double booking", "price": 1})
+    treatment_id = t.json()["id"]
+    slot = {"client_name": "Test", "client_phone": "07000000000", "treatment_id": treatment_id, "starts_at": "2030-01-01T09:00:00Z"}
+
+    first = client.post("/bookings", json=slot)
+    assert first.status_code == 200
+
+    second = client.post("/bookings", json=slot)
+    assert second.status_code == 409 
+
+    client.delete(f"/bookings/{first.json()['id']}")
+    client.delete(f"/treatments/{treatment_id}")
+     

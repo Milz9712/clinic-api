@@ -1,4 +1,4 @@
-from psycopg.errors import ForeignKeyViolation
+from psycopg.errors import ForeignKeyViolation, UniqueViolation
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from datetime import datetime
@@ -115,6 +115,8 @@ def add_booking(booking: Booking):
             ).fetchone()
     except ForeignKeyViolation:
         raise HTTPException(status_code=404, detail="Treatment not found")
+    except UniqueViolation:
+        raise HTTPException(status_code=409, detail="That time slot is already booked")
     if row is None:
         raise HTTPException(status_code=500, detail="Failed to create booking")
     return {
@@ -133,17 +135,23 @@ def list_bookings():
             "SELECT id, client_name, client_phone, treatment_id, starts_at FROM bookings ORDER BY starts_at"
         ).fetchall()
     return [
-        {"id": r[0], "client_name": r[1], "client_phone": r[2], 
-         "treatment_id": r[3], "starts_at": r[4]}
+        {
+            "id": r[0],
+            "client_name": r[1],
+            "client_phone": r[2],
+            "treatment_id": r[3],
+            "starts_at": r[4],
+        }
         for r in rows
     ]
+
 
 @app.delete("/bookings/{booking_id}")
 def delete_booking(booking_id: int):
     with psycopg.connect(DATABASE_URL) as conn:
         row = conn.execute(
-            "DELETE FROM bookings WHERE id = %s RETURNING id", 
-            (booking_id,), 
+            "DELETE FROM bookings WHERE id = %s RETURNING id",
+            (booking_id,),
         ).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="Booking not found")

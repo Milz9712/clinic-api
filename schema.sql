@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS bookings (
   client_name TEXT NOT NULL,
   client_phone TEXT NOT NULL, 
   treatment_id INTEGER NOT NULL REFERENCES treatments(id), 
-  starts_at TIMESTAMPTZ NOT NULL 
+  starts_at TIMESTAMPTZ NOT NULL UNIQUE 
 );
