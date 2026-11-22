@@ -30,18 +30,19 @@ The tests use the real database, so `DATABASE_URL` must be set. The create and d
 pytest
 ```
 
-Expected: 11 passed
+Expected: 13 passed
 
 What the tests cover:
 - GET /treatments returns 200 (list works)
 - GET /treatments/99 returns 404 (treatment doesn't exist)
 - GET /treatments/abc returns 422 (id isn't a number)
 - POST /treatments with a name and price returns 200, and the response contains the name it sent (cupping)
-- POST /treatments with a name only returns 422, wrong input as price is missing
+- POST /treatments with a name only returns 422, as price is missing. 
+- POST /treatments with an empty name and a negative price returns 422 with two errors, one per field. 
 - DELETE on a treatment the test just created returns 200; a second DELETE returns 404. 
 - GET /treatments/99 returns a 404, and the app logs a warning, which the test checks with caplog.
 - GET /bookings returns 200 (booking table works)
-- POST /bookings with a name, phone number, treatment, date time returns 200, bookings that doesn't exist returns 404 and a booking with an invalid date returns 422
+- POST /bookings with a name, phone number, treatment, date time returns 200, bookings that doesn't exist returns 404 and a booking with an invalid date returns 422. 409 if that time slot is already booked. 
 - DELETE on a booking that the tests creates returns 200, a second delete returns 404 as not found. 
 
 ## Endpoints 
@@ -50,11 +51,11 @@ What the tests cover:
 |--------|------|--------------|
 | GET | / | Health check. Returns the clinic name and status |
 | GET | /treatments | Returns all treatments |
-| GET | /treatments/{id} | Returns one treatment by ID. 404 if not found, 422 if the ID isn't a number |
-| POST | /treatments | Adds a new treatment. Needs name and price, 422 if either is missing. | 
+| GET | /treatments/{id} | Returns one treatment by ID. 404 if not found, 422 if the ID isn't a number  |
+| POST | /treatments | Adds a new treatment. Needs name and price, 422 if either is missing, the name is empty or the price isn't above 0. | 
 | DELETE | /treatments/{id} | Removes a treatment by ID. 404 if not found |
 | GET | /bookings | Lists all bookings, sorted by appointment time |
-| POST | /bookings | Creates a new booking. Needs client name, client phone, treatment id and the booking date. 404 is returned if the treatment couldn't be found and 422 if a field is missing or that the date is not valid |
+| POST | /bookings | Creates a new booking. Needs client name, client phone, treatment id and the booking date. 404 is returned if the treatment couldn't be found and 422 if a field is missing or that the date is not valid. 409 if that time slot is already booked. |
 | DELETE | /bookings/{booking_id} | Removes a booking by ID, returns 404 if booking not found |
 
 ## Continuous integration (CI)
