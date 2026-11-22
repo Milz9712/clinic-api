@@ -93,3 +93,8 @@ def test_booking_bad_date():
         },
     )
     assert response.status_code == 422
+
+
+def test_list_bookings():
+    response = client.get("/bookings")
+    assert response.status_code == 200

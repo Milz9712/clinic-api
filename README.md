@@ -1,6 +1,6 @@
 # clinic-api
 
-This API is for Hainault Health clinic where the API talks to my server by sending a request to an address, get data back. the clinic api lets someone get the treatment list, look up one treatment, add a new one or or delete one.  
+This API is for Hainault Health Clinic. It lets someone get the treatment list, look up one treatment, add a new one or delete one, and create, list and delete client bookings. Treatments and bookings are stored in a Postgres database. 
 
 📄 [Read the case study: how I built and deployed this](CASE_STUDY.md)
 
@@ -16,7 +16,7 @@ Clinic-api uses a Postgres database. The old in-memory list has been removed.
 
 The app finds the database through the environment variable `DATABASE_URL` (`os.environ["DATABASE_URL"]`), so set it before running the app. 
 
-To create the table on a new machine, run `schema.sql` against the database:
+To create the tables on a new machine, run `schema.sql` against the database:
 
 ```
 psql "$DATABASE_URL" -f schema.sql
@@ -30,7 +30,7 @@ The tests use the real database, so `DATABASE_URL` must be set. The create and d
 pytest
 ```
 
-Expected: 7 passed
+Expected: 11 passed
 
 What the tests cover:
 - GET /treatments returns 200 (list works)
@@ -40,6 +40,9 @@ What the tests cover:
 - POST /treatments with a name only returns 422, wrong input as price is missing
 - DELETE on a treatment the test just created returns 200; a second DELETE returns 404. 
 - GET /treatments/99 returns a 404, and the app logs a warning, which the test checks with caplog.
+- GET /bookings returns 200 (booking table works)
+- POST /bookings with a name, phone number, treatment, date time returns 200, bookings that doesn't exist returns 404 and a booking with an invalid date returns 422
+- DELETE on a booking that the tests creates returns 200, a second delete returns 404 as not found. 
 
 ## Endpoints 
 
@@ -50,12 +53,15 @@ What the tests cover:
 | GET | /treatments/{id} | Returns one treatment by ID. 404 if not found, 422 if the ID isn't a number |
 | POST | /treatments | Adds a new treatment. Needs name and price, 422 if either is missing. | 
 | DELETE | /treatments/{id} | Removes a treatment by ID. 404 if not found |
+| GET | /bookings | Lists all bookings, sorted by appointment time |
+| POST | /bookings | Creates a new booking. Needs client name, client phone, treatment id and the booking date. 404 is returned if the treatment couldn't be found and 422 if a field is missing or that the date is not valid |
+| DELETE | /bookings/{booking_id} | Removes a booking by ID, returns 404 if booking not found |
 
 ## Continuous integration (CI)
 
 Every push to GitHub runs two jobs automatically (`.github/workflows/docker.yml`):
 
-- **build** runs onnly if **test** passes. It logs into AWS with GitHub OIDC (no stored keys), builds the Docker image and pushes it to a private Amazon ECR repository, tagged with the commit ID. 
+- **build** runs only if **test** passes. It logs into AWS with GitHub OIDC (no stored keys), builds the Docker image and pushes it to a private Amazon ECR repository, tagged with the commit ID. 
 - **test** starts a temporary Postgres database, creates the table with `schema.sql`, and runs `pytest`. The database is thrown away afterwards, so no real data is ever touched.
 
 See the results in the **Actions** tab on GitHub: a green tick means both jobs passed. 
@@ -103,8 +109,8 @@ curl localhost:8000/treatments
 
 ## What I'm building next
 
-- Deploy to AWS from GitHub Actions (OIDG, no stored keys)
-- Deploy it online
+- A client assistant built on the Claude API that answers questions about treatments and books appointments using this API
+- Stop double-bookings (two clients booking into the same slot)
 
 ## Logging
 
